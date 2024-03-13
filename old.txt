@@ -1,0 +1,41 @@
+@Function
+    public String[] parseResponse(
+            ContentService cs,
+            @Parameter @Name("responseZipDocId") @DocumentDataType Long responseZipDocId,
+            @Parameter @Name("filename") String filename) {
+
+        /* Early exit */
+        if (responseZipDocId == null) {
+            return null;
+        }
+
+        try {
+            /* Retrieve responseZip */
+            InputStream responseZip = cs.download(responseZipDocId, ContentConstants.VERSION_CURRENT, false)[0]
+                    .getInputStream();
+
+            /* Zip iteration */
+            try (ZipInputStream zipInputStream = new ZipInputStream(responseZip)) {
+                ZipEntry entry;
+                while ((entry = zipInputStream.getNextEntry()) != null) {
+                    if (entry.getName().equals(filename)) {
+                        /* XML parser */
+                        Element root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(zipInputStream)
+                                .getDocumentElement();
+
+                        /* Retrieve elements */
+                        String documentHash = root.getElementsByTagName("DocumentHash").item(0).getTextContent().trim();
+                        String euContentEnc64 = root.getElementsByTagName("Content").item(0).getTextContent().trim();
+                        String euKeyEnc64 = root.getElementsByTagName("Key").item(0).getTextContent().trim();
+
+                        /* Return */
+                        return new String[] { documentHash, euContentEnc64, euKeyEnc64 };
+                    }
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }

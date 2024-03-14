@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -306,6 +307,10 @@ public class EEEncryption {
 
             /* Extract values */
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new InputSource(new StringReader(as4Payload)));
             String content = doc.getElementsByTagName("Content").item(0).getTextContent();

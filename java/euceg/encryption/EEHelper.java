@@ -101,10 +101,11 @@ public class EEHelper {
     /* Get public key from truststore */
     public static final PublicKey getPublicKey(ContentService cs, Long truststoreDocumentId, String alias,
             String password) throws Exception {
-        InputStream truststore = EEHelper.downloadDocument(cs, truststoreDocumentId);
-        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-        ks.load(truststore, password.toCharArray());
-        return ks.getCertificate(alias).getPublicKey();
+        try (InputStream truststore = EEHelper.downloadDocument(cs, truststoreDocumentId)) {
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks.load(truststore, password.toCharArray());
+            return ks.getCertificate(alias).getPublicKey();
+        }
     }
 
     /* Encrypt with Pub key */
@@ -118,14 +119,15 @@ public class EEHelper {
     /* Get private key from keystore */
     public static final PrivateKey getPrivateKey(ContentService cs, Long keystoreDocumentId, String alias,
             String password, String keyPassword) throws Exception {
-        InputStream keystore = EEHelper.downloadDocument(cs, keystoreDocumentId);
-        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-        ks.load(keystore, password.toCharArray());
-        Key key = ks.getKey(alias, keyPassword.toCharArray());
-        if (!(key instanceof PrivateKey)) {
-            throw new IllegalStateException("No private key found in the keystore under alias " + alias);
+        try (InputStream keystore = EEHelper.downloadDocument(cs, keystoreDocumentId)) {
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks.load(keystore, password.toCharArray());
+            Key key = ks.getKey(alias, keyPassword.toCharArray());
+            if (!(key instanceof PrivateKey)) {
+                throw new IllegalStateException("No private key found in the keystore under alias " + alias);
+            }
+            return (PrivateKey) key;
         }
-        return (PrivateKey) key;
     }
 
     /* Decrypt with Private key */
